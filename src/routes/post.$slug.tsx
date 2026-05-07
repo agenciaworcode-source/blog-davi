@@ -88,7 +88,7 @@ function PostPage() {
         <div className="container-blog max-w-3xl py-14">
           <h2 className="font-serif text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">A notícia</h2>
           <div className="mt-4 space-y-5 text-lg leading-relaxed text-foreground/90">
-            {post.body.map((p, i) => <p key={i}>{p}</p>)}
+            {post.body.map((p: string, i: number) => <p key={i}>{p}</p>)}
           </div>
 
           {/* Opinion block */}
