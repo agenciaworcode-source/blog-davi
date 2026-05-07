@@ -75,11 +75,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "LFM Insights — Economia & Mercado por Luiz Felipe Michelin" },
       { name: "description", content: "Curadoria diária e opinião sobre as notícias que movem a economia, por Luiz Felipe Michelin, consultor independente CVM." },
       { name: "author", content: "Luiz Felipe Michelin" },
-      { property: "og:title", content: "LFM Insights — Economia & Mercado" },
-      { property: "og:description", content: "Notícias econômicas com a leitura do consultor Luiz Felipe Michelin." },
+      { property: "og:title", content: "LFM Insights — Economia & Mercado por Luiz Felipe Michelin" },
+      { property: "og:description", content: "Curadoria diária e opinião sobre as notícias que movem a economia, por Luiz Felipe Michelin, consultor independente CVM." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "LFM Insights — Economia & Mercado por Luiz Felipe Michelin" },
+      { name: "twitter:description", content: "Curadoria diária e opinião sobre as notícias que movem a economia, por Luiz Felipe Michelin, consultor independente CVM." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5b31470e-fb08-450a-8477-3bfe3c020d90/id-preview-2e23d336--b1bebdf8-b53c-4c85-8a7a-3eacd0e9eb02.lovable.app-1778168736069.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5b31470e-fb08-450a-8477-3bfe3c020d90/id-preview-2e23d336--b1bebdf8-b53c-4c85-8a7a-3eacd0e9eb02.lovable.app-1778168736069.png" },
     ],
     links: [
       {
