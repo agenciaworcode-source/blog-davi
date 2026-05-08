@@ -1,11 +1,52 @@
 import { createServerFn } from '@tanstack/react-start'
-import { createClient } from '@supabase/supabase-js'
 
-function getSupabaseAdmin() {
-  const url = process.env.VITE_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) throw new Error('Supabase admin credentials missing')
-  return createClient(url, key)
+// ── Supabase REST client (sem SDK — evita ERR_MODULE_NOT_FOUND no Vite SSR runner) ──
+
+function db() {
+  const base = `${process.env.VITE_SUPABASE_URL}/rest/v1`
+  const key  = process.env.SUPABASE_SERVICE_ROLE_KEY!
+  const h    = { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }
+
+  return {
+    async get(path: string, extra: Record<string, string> = {}) {
+      const res = await fetch(`${base}/${path}`, { headers: { ...h, ...extra } })
+      return res.ok ? res.json() : null
+    },
+    async post(path: string, body: unknown, extra: Record<string, string> = {}) {
+      const res = await fetch(`${base}/${path}`, {
+        method: 'POST',
+        headers: { ...h, Prefer: 'return=representation', ...extra },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      return { data: res.ok ? data : null, error: res.ok ? null : data }
+    },
+    async patch(path: string, body: unknown) {
+      const res = await fetch(`${base}/${path}`, {
+        method: 'PATCH',
+        headers: { ...h, Prefer: 'return=representation' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      return { data: res.ok ? data : null, error: res.ok ? null : data }
+    },
+    async delete(path: string) {
+      const res = await fetch(`${base}/${path}`, { method: 'DELETE', headers: h })
+      return res.ok
+    },
+    async count(path: string): Promise<number> {
+      const res = await fetch(`${base}/${path}`, { method: 'HEAD', headers: { ...h, Prefer: 'count=exact' } })
+      const range = res.headers.get('Content-Range') || '*/0'
+      return parseInt(range.split('/')[1] ?? '0') || 0
+    },
+    async rpc(fn: string, body: unknown) {
+      const res = await fetch(`${base}/rpc/${fn}`, {
+        method: 'POST', headers: h, body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      return { data: res.ok ? data : null, error: res.ok ? null : { message: String(data) } }
+    },
+  }
 }
 
 // ── Manual RSS Sync ───────────────────────────────────────────────────────────
@@ -18,251 +59,52 @@ export const syncNewsAction = createServerFn({ method: 'POST' }).handler(async (
 // ── Publicar todos os rascunhos ───────────────────────────────────────────────
 
 export const publishPendingAction = createServerFn({ method: 'POST' }).handler(async () => {
-  const supabase = getSupabaseAdmin()
-  const { data, error } = await supabase
-    .from('posts')
-    .update({ published: true })
-    .eq('published', false)
-    .select('id, title')
-
-  if (error) return { success: false, message: error.message }
-  return {
-    success: true,
-    message: `${data?.length ?? 0} post(s) publicado(s).`,
-    count: data?.length ?? 0,
-  }
+  const { data, error } = await db().patch('posts?published=eq.false', { published: true })
+  if (error) return { success: false, message: String(error) }
+  return { success: true, message: `${data?.length ?? 0} post(s) publicado(s).`, count: data?.length ?? 0 }
 })
 
 // ── Stats do dashboard ────────────────────────────────────────────────────────
 
 export const getDashboardStatsAction = createServerFn({ method: 'GET' }).handler(async () => {
-  const supabase = getSupabaseAdmin()
-
-  const [postsTotal, postsPublished, postsPending, subscribers, lastSync] = await Promise.all([
-    supabase.from('posts').select('*', { count: 'exact', head: true }),
-    supabase.from('posts').select('*', { count: 'exact', head: true }).eq('published', true),
-    supabase.from('posts').select('*', { count: 'exact', head: true }).eq('published', false),
-    supabase.from('subscribers').select('*', { count: 'exact', head: true }),
-    supabase.from('sync_logs').select('*').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+  const client = db()
+  const [total, published, pending, subscribers, lastSyncArr] = await Promise.all([
+    client.count('posts?select=*'),
+    client.count('posts?select=*&published=eq.true'),
+    client.count('posts?select=*&published=eq.false'),
+    client.count('subscribers?select=*'),
+    client.get('sync_logs?select=*&order=created_at.desc&limit=1'),
   ])
-
   return {
-    total:       postsTotal.count     ?? 0,
-    published:   postsPublished.count ?? 0,
-    pending:     postsPending.count   ?? 0,
-    subscribers: subscribers.count    ?? 0,
-    lastSync:    lastSync.data        ?? null,
+    total,
+    published,
+    pending,
+    subscribers,
+    lastSync: Array.isArray(lastSyncArr) ? lastSyncArr[0] ?? null : null,
   }
 })
 
 // ── Aplicar horários de automação via pg_cron ─────────────────────────────────
 
-// Lê sync_times_brt e sync_enabled do DB (salvo previamente) e aplica no pg_cron
 export const updateScheduleAction = createServerFn({ method: 'POST' }).handler(async () => {
-  const supabase = getSupabaseAdmin()
+  const client = db()
   const supabaseUrl = process.env.VITE_SUPABASE_URL || ''
-  const cronSecret = process.env.CRON_SECRET || ''
-  const edgeUrl = `${supabaseUrl}/functions/v1/rss-sync`
+  const cronSecret  = process.env.CRON_SECRET || ''
 
-  const { data: config, error: configErr } = await supabase
-    .from('config')
-    .select('sync_times_brt, sync_enabled')
-    .single()
+  const configArr = await client.get('config?select=sync_times_brt,sync_enabled&limit=1')
+  const config = Array.isArray(configArr) ? configArr[0] : null
+  if (!config) return { success: false, message: 'Config não encontrada.' }
 
-  if (configErr) return { success: false, message: configErr.message }
-
-  const { data: result, error } = await supabase.rpc('reschedule_lfm_sync', {
+  const { data: result, error } = await client.rpc('reschedule_lfm_sync', {
     p_times_brt:   config.sync_times_brt  || ['07:00', '12:00', '18:00'],
     p_enabled:     config.sync_enabled    ?? true,
-    p_edge_url:    edgeUrl,
+    p_edge_url:    `${supabaseUrl}/functions/v1/rss-sync`,
     p_cron_secret: cronSecret,
   })
 
   if (error) return { success: false, message: error.message }
   return { success: true, message: result as string }
 })
-
-// ── Buscar posts publicados ───────────────────────────────────────────────────
-
-export const getPublishedPostsAction = createServerFn({ method: 'GET' }).handler(async () => {
-  const supabase = getSupabaseAdmin()
-  const { data, error } = await supabase
-    .from('posts')
-    .select('slug, title, excerpt, category, date, reading_time, source, cover, opinion, body, featured, published')
-    .eq('published', true)
-    .order('date', { ascending: false })
-
-  if (error) throw new Error(error.message)
-  return data ?? []
-})
-
-// ── Buscar post por slug + relacionados ───────────────────────────────────────
-
-export const getPostBySlugAction = createServerFn({ method: 'POST' }).handler(
-  async ({ data: slug }: { data: string }) => {
-    const supabase = getSupabaseAdmin()
-
-    const [{ data: post, error }, { data: related }] = await Promise.all([
-      supabase
-        .from('posts')
-        .select('slug, title, excerpt, category, date, reading_time, source, cover, opinion, body, featured, published')
-        .eq('slug', slug)
-        .eq('published', true)
-        .maybeSingle(),
-      supabase
-        .from('posts')
-        .select('slug, title, excerpt, category, date, reading_time, source, cover, opinion, body, featured')
-        .eq('published', true)
-        .neq('slug', slug)
-        .order('date', { ascending: false })
-        .limit(3),
-    ])
-
-    if (error) throw new Error(error.message)
-    return { post: post ?? null, related: related ?? [] }
-  }
-)
-
-// ── Newsletter: inscrever ─────────────────────────────────────────────────────
-
-export const subscribeAction = createServerFn({ method: 'POST' }).handler(
-  async ({ data }: { data: { email: string; name?: string } }) => {
-    const { email, name } = data
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return { success: false, message: 'E-mail inválido.' }
-    }
-
-    const supabase = getSupabaseAdmin()
-
-    // Verifica se já existe
-    const { data: existing } = await supabase
-      .from('subscribers')
-      .select('id, active')
-      .eq('email', email)
-      .maybeSingle()
-
-    if (existing) {
-      if (existing.active) return { success: false, message: 'Este e-mail já está inscrito.' }
-      // Reativa inscrito que havia cancelado
-      await supabase.from('subscribers').update({ active: true, name: name || null }).eq('id', existing.id)
-      return { success: true, message: 'Inscrição reativada com sucesso!' }
-    }
-
-    const { data: inserted, error } = await supabase
-      .from('subscribers')
-      .insert([{ email, name: name || null, active: true }])
-      .select('id')
-      .single()
-
-    if (error) return { success: false, message: 'Erro ao salvar inscrição.' }
-
-    // Envia e-mail de boas-vindas
-    try {
-      const { sendEmail } = await import('./email')
-      const { welcomeEmail } = await import('./email-templates')
-      const token = Buffer.from(inserted.id).toString('base64url')
-      const { subject, html } = welcomeEmail(email, token)
-      await sendEmail({ to: email, subject, html })
-    } catch (e: any) {
-      console.error('[newsletter] Erro ao enviar boas-vindas:', e?.message)
-      // Não bloqueia a inscrição se o e-mail falhar
-    }
-
-    return { success: true, message: 'Inscrição realizada! Verifique seu e-mail.' }
-  }
-)
-
-// ── Newsletter: desinscrever ──────────────────────────────────────────────────
-
-export const unsubscribeAction = createServerFn({ method: 'POST' }).handler(
-  async ({ data: token }: { data: string }) => {
-    let id: string
-    try {
-      id = Buffer.from(token, 'base64url').toString('utf-8')
-    } catch {
-      return { success: false, message: 'Link inválido.' }
-    }
-
-    const supabase = getSupabaseAdmin()
-    const { error } = await supabase
-      .from('subscribers')
-      .update({ active: false })
-      .eq('id', id)
-
-    if (error) return { success: false, message: 'Erro ao processar solicitação.' }
-    return { success: true, message: 'Inscrição cancelada com sucesso.' }
-  }
-)
-
-// ── Newsletter: stats dos inscritos ──────────────────────────────────────────
-
-export const getSubscriberStatsAction = createServerFn({ method: 'GET' }).handler(async () => {
-  const supabase = getSupabaseAdmin()
-  const [total, active] = await Promise.all([
-    supabase.from('subscribers').select('*', { count: 'exact', head: true }),
-    supabase.from('subscribers').select('*', { count: 'exact', head: true }).eq('active', true),
-  ])
-  return {
-    total: total.count ?? 0,
-    active: active.count ?? 0,
-    inactive: (total.count ?? 0) - (active.count ?? 0),
-  }
-})
-
-// ── Newsletter: toggle ativo/inativo ─────────────────────────────────────────
-
-export const toggleSubscriberAction = createServerFn({ method: 'POST' }).handler(
-  async ({ data }: { data: { id: string; active: boolean } }) => {
-    const supabase = getSupabaseAdmin()
-    const { error } = await supabase
-      .from('subscribers')
-      .update({ active: data.active })
-      .eq('id', data.id)
-    if (error) return { success: false, message: error.message }
-    return { success: true }
-  }
-)
-
-// ── Newsletter: enviar digest ─────────────────────────────────────────────────
-
-export const sendNewsletterAction = createServerFn({ method: 'POST' }).handler(
-  async ({ data }: { data: { subject: string; editorial: string; postSlugs: string[] } }) => {
-    const supabase = getSupabaseAdmin()
-
-    // Busca posts selecionados
-    const { data: posts, error: postsErr } = await supabase
-      .from('posts')
-      .select('title, slug, category, excerpt, opinion, reading_time')
-      .in('slug', data.postSlugs)
-      .eq('published', true)
-
-    if (postsErr || !posts?.length) return { success: false, message: 'Nenhum post encontrado.' }
-
-    // Busca inscritos ativos com seus IDs (para gerar tokens de descadastro)
-    const { data: subscribers, error: subErr } = await supabase
-      .from('subscribers')
-      .select('id, email')
-      .eq('active', true)
-
-    if (subErr || !subscribers?.length) return { success: false, message: 'Nenhum inscrito ativo.' }
-
-    const recipients = subscribers.map((s) => ({
-      email: s.email,
-      token: Buffer.from(s.id).toString('base64url'),
-    }))
-
-    try {
-      const { sendBatch } = await import('./email')
-      const { newsletterDigest } = await import('./email-templates')
-      const sent = await sendBatch(recipients, (token) =>
-        newsletterDigest(posts, data.subject, data.editorial, token)
-      )
-      return { success: true, message: `Newsletter enviada para ${sent} inscritos.`, sent }
-    } catch (e: any) {
-      return { success: false, message: e?.message || 'Erro ao enviar.' }
-    }
-  }
-)
 
 // ── Buscar status dos jobs pg_cron ────────────────────────────────────────────
 
@@ -275,8 +117,114 @@ export interface CronJob {
 }
 
 export const getScheduleStatusAction = createServerFn({ method: 'GET' }).handler(async () => {
-  const supabase = getSupabaseAdmin()
-  const { data, error } = await supabase.rpc('get_lfm_sync_jobs')
+  const { data, error } = await db().rpc('get_lfm_sync_jobs', {})
   if (error) return { jobs: [] as CronJob[], error: error.message }
   return { jobs: (data || []) as CronJob[], error: null }
 })
+
+// ── Newsletter: inscrever ─────────────────────────────────────────────────────
+
+export const subscribeAction = createServerFn({ method: 'POST' }).handler(
+  async ({ data }: { data: { email: string; name?: string } }) => {
+    const { email, name } = data
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return { success: false, message: 'E-mail inválido.' }
+    }
+
+    const client = db()
+    const existingArr = await client.get(`subscribers?select=id,active&email=eq.${encodeURIComponent(email)}&limit=1`)
+    const existing = Array.isArray(existingArr) ? existingArr[0] : null
+
+    if (existing) {
+      if (existing.active) return { success: false, message: 'Este e-mail já está inscrito.' }
+      await client.patch(`subscribers?id=eq.${existing.id}`, { active: true, name: name || null })
+      return { success: true, message: 'Inscrição reativada com sucesso!' }
+    }
+
+    const { data: inserted, error } = await client.post('subscribers', { email, name: name || null, active: true })
+    if (error || !inserted?.[0]) return { success: false, message: 'Erro ao salvar inscrição.' }
+
+    try {
+      const { sendEmail }    = await import('./email')
+      const { welcomeEmail } = await import('./email-templates')
+      const token = Buffer.from(inserted[0].id).toString('base64url')
+      const { subject, html } = welcomeEmail(email, token)
+      await sendEmail({ to: email, subject, html })
+    } catch (e: any) {
+      console.error('[newsletter] Erro ao enviar boas-vindas:', e?.message)
+    }
+
+    return { success: true, message: 'Inscrição realizada! Verifique seu e-mail.' }
+  }
+)
+
+// ── Newsletter: desinscrever ──────────────────────────────────────────────────
+
+export const unsubscribeAction = createServerFn({ method: 'POST' }).handler(
+  async ({ data: token }: { data: string }) => {
+    let id: string
+    try { id = Buffer.from(token, 'base64url').toString('utf-8') }
+    catch { return { success: false, message: 'Link inválido.' } }
+
+    const { error } = await db().patch(`subscribers?id=eq.${id}`, { active: false })
+    if (error) return { success: false, message: 'Erro ao processar solicitação.' }
+    return { success: true, message: 'Inscrição cancelada com sucesso.' }
+  }
+)
+
+// ── Newsletter: stats ─────────────────────────────────────────────────────────
+
+export const getSubscriberStatsAction = createServerFn({ method: 'GET' }).handler(async () => {
+  const client = db()
+  const [total, active] = await Promise.all([
+    client.count('subscribers?select=*'),
+    client.count('subscribers?select=*&active=eq.true'),
+  ])
+  return { total, active, inactive: total - active }
+})
+
+// ── Newsletter: toggle ativo/inativo ─────────────────────────────────────────
+
+export const toggleSubscriberAction = createServerFn({ method: 'POST' }).handler(
+  async ({ data }: { data: { id: string; active: boolean } }) => {
+    const { error } = await db().patch(`subscribers?id=eq.${data.id}`, { active: data.active })
+    if (error) return { success: false, message: String(error) }
+    return { success: true }
+  }
+)
+
+// ── Newsletter: enviar digest ─────────────────────────────────────────────────
+
+export const sendNewsletterAction = createServerFn({ method: 'POST' }).handler(
+  async ({ data }: { data: { subject: string; editorial: string; postSlugs: string[] } }) => {
+    const client = db()
+
+    const slugFilter = data.postSlugs.map(s => `slug=eq.${encodeURIComponent(s)}`).join('&')
+    const [postsArr, subscribersArr] = await Promise.all([
+      client.get(`posts?select=title,slug,category,excerpt,opinion,reading_time&published=eq.true&or=(${data.postSlugs.map(s => `slug.eq.${s}`).join(',')})`),
+      client.get('subscribers?select=id,email&active=eq.true'),
+    ])
+
+    const posts = Array.isArray(postsArr) ? postsArr : []
+    const subscribers = Array.isArray(subscribersArr) ? subscribersArr : []
+
+    if (!posts.length)       return { success: false, message: 'Nenhum post encontrado.' }
+    if (!subscribers.length) return { success: false, message: 'Nenhum inscrito ativo.' }
+
+    const recipients = subscribers.map((s: any) => ({
+      email: s.email,
+      token: Buffer.from(s.id).toString('base64url'),
+    }))
+
+    try {
+      const { sendBatch }         = await import('./email')
+      const { newsletterDigest }  = await import('./email-templates')
+      const sent = await sendBatch(recipients, (token) =>
+        newsletterDigest(posts, data.subject, data.editorial, token)
+      )
+      return { success: true, message: `Newsletter enviada para ${sent} inscritos.`, sent }
+    } catch (e: any) {
+      return { success: false, message: e?.message || 'Erro ao enviar.' }
+    }
+  }
+)
