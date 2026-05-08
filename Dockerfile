@@ -3,6 +3,12 @@ FROM node:22-slim AS builder
 
 WORKDIR /app
 
+# Recebe as variáveis do Coolify durante o build e repassa pro Vite
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 # Copia manifests e instala dependências
 COPY package*.json ./
 RUN npm ci --ignore-scripts
