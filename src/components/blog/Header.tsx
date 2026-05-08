@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
+import { SocialBar } from "./SocialIcons";
 
 export function Header() {
   return (
@@ -8,7 +9,8 @@ export function Header() {
         <Link to="/" className="hover:opacity-80 transition-opacity">
           <Logo />
         </Link>
-        <nav className="hidden md:flex items-center gap-8 text-[13px] text-muted-foreground">
+
+        <nav className="hidden md:flex items-center gap-6 text-[13px] text-muted-foreground">
           <Link to="/" className="hover:text-foreground transition-colors" activeOptions={{ exact: true }} activeProps={{ className: "text-foreground" }}>
             Feed
           </Link>
@@ -17,7 +19,12 @@ export function Header() {
           <a href="https://consultorialfm.com.br" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">
             Consultoria
           </a>
+
+          {/* Divisor + redes sociais */}
+          <span className="h-4 w-px bg-border" />
+          <SocialBar size="sm" />
         </nav>
+
         <a
           href="#newsletter"
           className="inline-flex items-center rounded-full border border-foreground/10 bg-foreground/[0.03] px-4 py-1.5 text-[13px] font-medium text-foreground hover:bg-foreground hover:text-background transition"

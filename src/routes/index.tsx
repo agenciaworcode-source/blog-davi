@@ -3,6 +3,7 @@ import { Header } from "@/components/blog/Header";
 import { Footer } from "@/components/blog/Footer";
 import { Newsletter } from "@/components/blog/Newsletter";
 import { PostCard } from "@/components/blog/PostCard";
+import { SocialBar } from "@/components/blog/SocialIcons";
 
 const COLS = "slug,title,excerpt,category,date,reading_time,source,cover,opinion,body,featured";
 
@@ -24,6 +25,22 @@ export const Route = createFileRoute("/")({
       { title: "LFM Insights — Feed de Economia & Mercado" },
       { name: "description", content: "Feed das principais notícias econômicas com a opinião de Luiz Felipe Michelin." },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          "name": "LFM Insights",
+          "url": "http://localhost:8080", // Idealmente usar BLOG_URL
+          "description": "Curadoria diária e opinião sobre as notícias que movem a economia, por Luiz Felipe Michelin.",
+          "author": {
+            "@type": "Person",
+            "name": "Luiz Felipe Michelin"
+          }
+        })
+      }
+    ]
   }),
   component: Index,
 });
@@ -79,7 +96,12 @@ function Index() {
           <div className="lg:col-span-5">
             <Link to="/post/$slug" params={{ slug: featured.slug }}>
               <div className="overflow-hidden rounded-2xl bg-muted">
-                <img src={featured.cover} alt={featured.title} className="h-full w-full object-cover aspect-[4/5] transition duration-700 hover:scale-[1.02]" />
+                <img
+                  src={featured.cover}
+                  alt={featured.title}
+                  className="h-full w-full object-cover aspect-[4/5] transition duration-700 hover:scale-[1.02]"
+                  fetchPriority="high"
+                />
               </div>
             </Link>
           </div>
@@ -110,20 +132,33 @@ function Index() {
           </div>
         </div>
 
-        <aside className="space-y-12">
+        <aside className="space-y-8 lg:sticky lg:top-20 lg:self-start">
+          {/* Sobre o autor */}
           <div className="rounded-2xl bg-muted/50 p-7">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 font-serif text-sm font-bold text-primary shrink-0">LF</div>
+              <div>
+                <div className="text-sm font-semibold text-foreground">Luiz Felipe Michelin</div>
+                <div className="text-xs text-muted-foreground">Consultor de Investimentos · CVM</div>
+              </div>
+            </div>
             <h3 className="font-serif text-lg text-foreground">Sobre o autor</h3>
-            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-              Luiz Felipe Michelin é consultor independente credenciado pela CVM. Aqui ele compartilha
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              Consultor independente credenciado pela CVM. Aqui ele compartilha
               leituras práticas das notícias econômicas que impactam o seu patrimônio.
             </p>
-            <a href="https://consultorialfm.com.br" target="_blank" rel="noreferrer"
-               className="mt-5 inline-flex items-center text-sm font-medium text-foreground hover:text-primary transition">
-              Conhecer a Consultoria LFM →
-            </a>
+            <div className="mt-5 flex items-center justify-between">
+              <a href="https://consultorialfm.com.br" target="_blank" rel="noreferrer"
+                 className="text-sm font-medium text-foreground hover:text-primary transition">
+                Consultoria LFM →
+              </a>
+              <SocialBar size="md" />
+            </div>
           </div>
+
+          {/* Mais lidas */}
           <div>
-            <h3 className="mb-2 font-serif text-lg text-foreground">Mais lidas</h3>
+            <h3 className="mb-4 font-serif text-lg text-foreground border-b border-border pb-3">Mais lidas</h3>
             <div>
               {posts.slice(0, 4).map((p) => <PostCard key={p.slug} post={p} variant="compact" />)}
             </div>

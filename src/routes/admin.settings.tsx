@@ -35,6 +35,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Hash,
+  Share2,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/admin/settings')({
@@ -55,6 +56,13 @@ const DEFAULT_CONFIG = {
   sync_times_brt: ['07:00', '12:00', '18:00'] as string[],
   max_posts_per_sync: 10,
   posts_per_feed: 6,
+  // Redes sociais
+  social_links: {
+    instagram: '',
+    facebook: '',
+    tiktok: '',
+    youtube: '',
+  } as Record<string, string>,
 }
 
 // Horários predefinidos sugeridos
@@ -110,6 +118,7 @@ function AdminSettings() {
         sync_times_brt:      data.sync_times_brt      || ['07:00', '12:00', '18:00'],
         max_posts_per_sync:  data.max_posts_per_sync  ?? 10,
         posts_per_feed:      data.posts_per_feed      ?? 6,
+        social_links:        data.social_links        || DEFAULT_CONFIG.social_links,
       })
     }
   }
@@ -535,6 +544,43 @@ function AdminSettings() {
                 gpt-4o-mini recomendado para baixo custo. Configure a chave no .env.
               </p>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Redes Sociais ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5 text-primary" />
+              Redes Sociais
+            </CardTitle>
+            <CardDescription>
+              Links exibidos no header do site e no card "Sobre o autor". Deixe em branco para ocultar.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {[
+              { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/seu_perfil' },
+              { key: 'facebook',  label: 'Facebook',  placeholder: 'https://facebook.com/sua_pagina'  },
+              { key: 'tiktok',   label: 'TikTok',    placeholder: 'https://tiktok.com/@seu_perfil'   },
+              { key: 'youtube',  label: 'YouTube',   placeholder: 'https://youtube.com/@seu_canal'   },
+            ].map(({ key, label, placeholder }) => (
+              <div key={key} className="grid grid-cols-[80px_1fr] items-center gap-3">
+                <Label className="text-sm font-medium">{label}</Label>
+                <Input
+                  value={config.social_links[key] || ''}
+                  onChange={e => setConfig({
+                    ...config,
+                    social_links: { ...config.social_links, [key]: e.target.value },
+                  })}
+                  placeholder={placeholder}
+                  type="url"
+                />
+              </div>
+            ))}
+            <p className="text-xs text-muted-foreground pt-1">
+              Cole a URL completa. Os ícones aparecem automaticamente no site após salvar.
+            </p>
           </CardContent>
         </Card>
 
