@@ -26,6 +26,8 @@ export const Route = createFileRoute("/post/$slug")({
     if (!post) throw notFound();
     return { post, related: related ?? [] };
   },
+  staleTime: 1000 * 60 * 5, // Cache por 5 minutos
+  gcTime: 1000 * 60 * 30, // Guarda em memória por 30 minutos
   head: ({ loaderData }) => ({
     meta: loaderData
       ? [

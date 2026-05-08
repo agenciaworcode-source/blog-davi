@@ -20,6 +20,8 @@ async function fetchPublishedPosts() {
 
 export const Route = createFileRoute("/")({
   loader: fetchPublishedPosts,
+  staleTime: 1000 * 60 * 5, // Cache por 5 minutos
+  gcTime: 1000 * 60 * 30, // Guarda em memória por 30 minutos
   head: () => ({
     meta: [
       { title: "LFM Insights — Feed de Economia & Mercado" },

@@ -32,6 +32,6 @@ COPY --from=builder /app/package.json ./package.json
 
 EXPOSE 3000
 
-# Usa wrangler para rodar o worker localmente na VPS
-# --port → porta exposta; --local → roda sem fazer deploy na nuvem da Cloudflare
-CMD ["wrangler", "dev", "dist/server/index.js", "--port", "3000", "--local", "--no-bundle", "--compatibility-date", "2025-09-24", "--compatibility-flag", "nodejs_compat", "--ip", "0.0.0.0"]
+# Cria arquivo .dev.vars injetando todas as variáveis de ambiente do sistema 
+# para que o motor do wrangler/Cloudflare consiga ler os secrets (Supabase, Resend, etc) na VPS.
+CMD sh -c 'env > .dev.vars && wrangler dev dist/server/index.js --port 3000 --local --no-bundle --compatibility-date 2025-09-24 --compatibility-flag nodejs_compat --ip 0.0.0.0'
