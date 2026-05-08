@@ -102,7 +102,11 @@ function PostPage() {
         <div className="container-blog max-w-3xl py-14">
           <h2 className="font-serif text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">A notícia</h2>
           <div className="mt-4 space-y-5 text-lg leading-relaxed text-foreground/90">
-            {post.body.map((p: string, i: number) => <p key={i}>{p}</p>)}
+            {post.body.map((p: string, i: number) =>
+              p.startsWith('<')
+                ? <div key={i} dangerouslySetInnerHTML={{ __html: p }} className="[&_h2]:font-serif [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mt-8 [&_h2]:mb-3 [&_h3]:font-serif [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_li]:mb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/40 [&_blockquote]:pl-5 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_p]:mb-4 [&_strong]:font-semibold [&_em]:italic [&_hr]:border-border [&_hr]:my-6" />
+                : <p key={i}>{p}</p>
+            )}
           </div>
 
           {/* Opinion block */}

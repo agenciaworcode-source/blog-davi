@@ -5,17 +5,17 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
+import {
+  Card,
+  CardContent,
+  CardHeader,
   CardTitle,
   CardDescription
 } from '@/components/ui/card'
-import { 
-  ArrowLeft, 
-  Save, 
-  Eye, 
+import {
+  ArrowLeft,
+  Save,
+  Eye,
   Sparkles,
   Image as ImageIcon,
   Type,
@@ -23,6 +23,22 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Switch } from '@/components/ui/switch'
+import { RichEditor } from '@/components/admin/RichEditor'
+
+// Convert body string[] → HTML string for the editor
+function bodyToHtml(body: string[]): string {
+  if (!body?.length) return ''
+  // If already HTML (from rich editor), return as-is
+  if (body[0]?.startsWith('<')) return body.join('')
+  return body.map(p => `<p>${p}</p>`).join('')
+}
+
+// Convert HTML string → body string[] for storage
+function htmlToBody(html: string): string[] {
+  if (!html || html === '<p></p>') return ['']
+  // Store as single-element array with full HTML
+  return [html]
+}
 
 export const Route = createFileRoute('/admin/posts/$id')({
   component: PostEditor,
@@ -33,6 +49,7 @@ function PostEditor() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [bodyHtml, setBodyHtml] = useState('')
   const [post, setPost] = useState<any>({
     title: '',
     slug: '',
@@ -67,22 +84,24 @@ function PostEditor() {
       navigate({ to: '/admin/posts' })
     } else {
       setPost(data)
+      setBodyHtml(bodyToHtml(data.body || []))
     }
     setLoading(false)
   }
 
   async function handleSave() {
     setSaving(true)
-    
+
     // Auto-generate slug if empty
     if (!post.slug) {
       post.slug = post.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
     }
 
+    const postToSave = { ...post, body: htmlToBody(bodyHtml) }
+
     let error;
     if (id === 'new') {
-      // Remove ID for insert to let Postgres generate it
-      const { id: _, ...postData } = post;
+      const { id: _, ...postData } = postToSave;
       const { error: insertError } = await supabase
         .from('posts')
         .insert([postData])
@@ -90,7 +109,7 @@ function PostEditor() {
     } else {
       const { error: updateError } = await supabase
         .from('posts')
-        .update(post)
+        .update(postToSave)
         .eq('id', id)
       error = updateError
     }
@@ -102,21 +121,6 @@ function PostEditor() {
       navigate({ to: '/admin/posts' })
     }
     setSaving(false)
-  }
-
-  const updateBody = (index: number, value: string) => {
-    const newBody = [...post.body]
-    newBody[index] = value
-    setPost({ ...post, body: newBody })
-  }
-
-  const addParagraph = () => {
-    setPost({ ...post, body: [...post.body, ''] })
-  }
-
-  const removeParagraph = (index: number) => {
-    const newBody = post.body.filter((_: any, i: number) => i !== index)
-    setPost({ ...post, body: newBody })
   }
 
   if (loading) {
@@ -181,30 +185,14 @@ function PostEditor() {
                 />
               </div>
               
-              <div className="space-y-4 pt-4 border-t border-border">
-                <Label>Corpo do Artigo (Parágrafos)</Label>
-                {post.body.map((p: string, index: number) => (
-                  <div key={index} className="flex gap-2">
-                    <Textarea 
-                      value={p}
-                      onChange={e => updateBody(index, e.target.value)}
-                      placeholder={`Parágrafo ${index + 1}...`}
-                      className="flex-1 min-h-[100px]"
-                    />
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="text-destructive shrink-0"
-                      onClick={() => removeParagraph(index)}
-                      disabled={post.body.length <= 1}
-                    >
-                      <ArrowLeft className="h-4 w-4 rotate-90" />
-                    </Button>
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" onClick={addParagraph} className="w-full border-dashed">
-                  Adicionar Parágrafo
-                </Button>
+              <div className="space-y-2 pt-4 border-t border-border">
+                <Label>Corpo do Artigo</Label>
+                <RichEditor
+                  value={bodyHtml}
+                  onChange={setBodyHtml}
+                  placeholder="Escreva o corpo da notícia aqui. Use os botões da barra para formatar — negrito, títulos, listas..."
+                  minHeight="320px"
+                />
               </div>
             </CardContent>
           </Card>

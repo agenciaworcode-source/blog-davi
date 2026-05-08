@@ -49,7 +49,9 @@ async function enrichWithAI(
   const rawText = item.contentSnippet || item.content || item.title || ''
 
   const fallback = {
-    summary: [rawText.slice(0, 600)].filter(Boolean),
+    summary: rawText
+      ? rawText.match(/.{1,500}/gs)?.slice(0, 4) ?? [rawText.slice(0, 1500)]
+      : ['Conteúdo disponível em breve.'],
     opinion: 'Análise disponível em breve.',
     category: inferCategory(item.title || '', rawText),
   }
@@ -64,12 +66,17 @@ Fonte da notícia: ${feedName}
 
 NOTÍCIA:
 Título: ${item.title}
-Conteúdo: ${rawText.slice(0, 1500)}
+Conteúdo: ${rawText.slice(0, 4000)}
 
 TAREFA — responda SOMENTE em JSON válido, sem markdown:
 {
-  "summary": ["parágrafo 1 (contexto da notícia)", "parágrafo 2 (análise macroeconômica)", "parágrafo 3 (impacto no investidor)"],
-  "opinion": "Opinião do Luiz em 1-2 frases impactantes, máximo 250 caracteres, na primeira pessoa.",
+  "summary": [
+    "parágrafo 1 — contexto completo da notícia (mínimo 100 palavras)",
+    "parágrafo 2 — análise macroeconômica aprofundada (mínimo 100 palavras)",
+    "parágrafo 3 — impacto prático no investidor brasileiro (mínimo 80 palavras)",
+    "parágrafo 4 — perspectivas e próximos passos (mínimo 60 palavras)"
+  ],
+  "opinion": "Opinião do Luiz em 1-2 frases impactantes, máximo 280 caracteres, na primeira pessoa.",
   "category": "uma das opções: Política Monetária | Câmbio | Bolsa | Renda Fixa | Fiscal | Internacional | Commodities | Mercado | Conjuntura"
 }
 `.trim()
@@ -78,7 +85,7 @@ TAREFA — responda SOMENTE em JSON válido, sem markdown:
       model: config.openai_model || 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
-      max_tokens: 700,
+      max_tokens: 1800,
       temperature: 0.7,
     })
 
@@ -224,7 +231,7 @@ export async function runRssSync(triggeredBy: 'manual' | 'cron' | 'api' = 'manua
         const postPayload = {
           title: item.title.trim(),
           slug,
-          excerpt: (item.contentSnippet || item.title).slice(0, 200).trim(),
+          excerpt: (item.contentSnippet || item.title).slice(0, 400).trim(),
           category,
           date: new Date().toISOString().split('T')[0],
           reading_time: estimateReadingTime(summary),
