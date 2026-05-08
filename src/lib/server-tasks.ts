@@ -145,10 +145,12 @@ export const subscribeAction = createServerFn({ method: 'POST' }).handler(
     if (error || !inserted?.[0]) return { success: false, message: 'Erro ao salvar inscrição.' }
 
     try {
-      const { sendEmail }    = await import('./email')
-      const { welcomeEmail } = await import('./email-templates')
+      const { sendEmail }                       = await import('./email')
+      const { welcomeEmail, DEFAULT_WELCOME }   = await import('./email-templates')
+      const configArr = await client.get('config?select=email_templates&limit=1')
+      const tpl = (Array.isArray(configArr) ? configArr[0] : null)?.email_templates?.welcome ?? DEFAULT_WELCOME
       const token = Buffer.from(inserted[0].id).toString('base64url')
-      const { subject, html } = welcomeEmail(email, token)
+      const { subject, html } = welcomeEmail(email, token, tpl)
       await sendEmail({ to: email, subject, html })
     } catch (e: any) {
       console.error('[newsletter] Erro ao enviar boas-vindas:', e?.message)
@@ -193,6 +195,43 @@ export const toggleSubscriberAction = createServerFn({ method: 'POST' }).handler
   }
 )
 
+// ── Email Templates: carregar ────────────────────────────────────────────────
+
+export interface WelcomeTemplate {
+  subject: string
+  headline: string
+  body: string
+  quote: string
+  cta_text: string
+}
+
+export interface NewsletterTemplate {
+  header_label: string
+  footer_text: string
+}
+
+export interface EmailTemplates {
+  welcome: WelcomeTemplate
+  newsletter: NewsletterTemplate
+}
+
+export const getEmailTemplatesAction = createServerFn({ method: 'GET' }).handler(async (): Promise<EmailTemplates | null> => {
+  const arr = await db().get('config?select=email_templates&limit=1')
+  const cfg = Array.isArray(arr) ? arr[0] : null
+  return cfg?.email_templates ?? null
+})
+
+export const saveEmailTemplatesAction = createServerFn({ method: 'POST' }).handler(
+  async ({ data }: { data: EmailTemplates }) => {
+    const arr = await db().get('config?select=id&limit=1')
+    const cfg = Array.isArray(arr) ? arr[0] : null
+    if (!cfg) return { success: false, message: 'Config não encontrada.' }
+    const { error } = await db().patch(`config?id=eq.${cfg.id}`, { email_templates: data })
+    if (error) return { success: false, message: String(error) }
+    return { success: true, message: 'Templates salvos com sucesso.' }
+  }
+)
+
 // ── Newsletter: enviar digest ─────────────────────────────────────────────────
 
 export const sendNewsletterAction = createServerFn({ method: 'POST' }).handler(
@@ -217,10 +256,12 @@ export const sendNewsletterAction = createServerFn({ method: 'POST' }).handler(
     }))
 
     try {
-      const { sendBatch }         = await import('./email')
-      const { newsletterDigest }  = await import('./email-templates')
+      const { sendBatch }                              = await import('./email')
+      const { newsletterDigest, DEFAULT_NEWSLETTER }   = await import('./email-templates')
+      const configArr = await client.get('config?select=email_templates&limit=1')
+      const tpl = (Array.isArray(configArr) ? configArr[0] : null)?.email_templates?.newsletter ?? DEFAULT_NEWSLETTER
       const sent = await sendBatch(recipients, (token) =>
-        newsletterDigest(posts, data.subject, data.editorial, token)
+        newsletterDigest(posts, data.subject, data.editorial, token, tpl)
       )
       return { success: true, message: `Newsletter enviada para ${sent} inscritos.`, sent }
     } catch (e: any) {

@@ -1,13 +1,14 @@
 import { createFileRoute, Outlet, useNavigate, Navigate, useLocation, Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { 
-  LayoutDashboard, 
-  Newspaper, 
-  Users, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Newspaper,
+  Users,
+  Settings,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Mail,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -64,6 +65,7 @@ function AdminLayout() {
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { label: 'Posts e Notícias', href: '/admin/posts', icon: Newspaper },
     { label: 'Inscritos', href: '/admin/newsletter', icon: Users },
+    { label: 'Templates de E-mail', href: '/admin/email-templates', icon: Mail },
     { label: 'Configurações', href: '/admin/settings', icon: Settings },
   ]
 
