@@ -145,7 +145,13 @@ CREATE POLICY subscribers_admin_all ON subscribers
 ALTER TABLE config ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS config_admin_all ON config;
+DROP POLICY IF EXISTS config_public_read ON config;
 
+-- Leitura pública (site exibe social links, categorias etc. sem autenticação)
+CREATE POLICY config_public_read ON config
+    FOR SELECT USING (true);
+
+-- Escrita/edição apenas para usuários autenticados (admin)
 CREATE POLICY config_admin_all ON config
     FOR ALL USING (auth.role() = 'authenticated');
 

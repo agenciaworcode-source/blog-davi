@@ -7,6 +7,7 @@ import {
   getScheduleStatusAction,
   type CronJob,
 } from '@/lib/server-tasks'
+import { resetSiteConfigCache } from '@/lib/site-config'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -150,6 +151,7 @@ function AdminSettings() {
       toast.error('Erro ao salvar: ' + error.message)
     } else {
       toast.success('Configurações salvas com sucesso')
+      resetSiteConfigCache()
     }
     setLoading(false)
   }
