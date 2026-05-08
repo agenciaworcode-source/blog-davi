@@ -147,10 +147,12 @@ export const subscribeAction = createServerFn({ method: 'POST' }).handler(
     try {
       const { sendEmail }                       = await import('./email')
       const { welcomeEmail, DEFAULT_WELCOME }   = await import('./email-templates')
-      const configArr = await client.get('config?select=email_templates&limit=1')
-      const tpl = (Array.isArray(configArr) ? configArr[0] : null)?.email_templates?.welcome ?? DEFAULT_WELCOME
+      const configArr = await client.get('config?select=email_templates,theme&limit=1')
+      const cfgRow = Array.isArray(configArr) ? configArr[0] : null
+      const tpl = cfgRow?.email_templates?.welcome ?? DEFAULT_WELCOME
+      const emailTheme = cfgRow?.theme?.email ?? undefined
       const token = Buffer.from(inserted[0].id).toString('base64url')
-      const { subject, html } = welcomeEmail(email, token, tpl)
+      const { subject, html } = welcomeEmail(email, token, tpl, emailTheme)
       await sendEmail({ to: email, subject, html })
     } catch (e: any) {
       console.error('[newsletter] Erro ao enviar boas-vindas:', e?.message)
@@ -192,6 +194,45 @@ export const toggleSubscriberAction = createServerFn({ method: 'POST' }).handler
     const { error } = await db().patch(`subscribers?id=eq.${data.id}`, { active: data.active })
     if (error) return { success: false, message: String(error) }
     return { success: true }
+  }
+)
+
+// ── Theme: carregar / salvar ──────────────────────────────────────────────────
+
+export interface SiteTheme {
+  font_pair_id: string
+  font_serif: string
+  font_sans: string
+  primary_hex: string
+  background_hex: string
+  radius: string
+}
+
+export interface EmailTheme {
+  accent_hex: string
+  bg_hex: string
+  text_hex: string
+}
+
+export interface ThemeConfig {
+  site: SiteTheme
+  email: EmailTheme
+}
+
+export const getThemeAction = createServerFn({ method: 'GET' }).handler(async (): Promise<ThemeConfig | null> => {
+  const arr = await db().get('config?select=theme&limit=1')
+  const cfg = Array.isArray(arr) ? arr[0] : null
+  return cfg?.theme ?? null
+})
+
+export const saveThemeAction = createServerFn({ method: 'POST' }).handler(
+  async ({ data }: { data: ThemeConfig }) => {
+    const arr = await db().get('config?select=id&limit=1')
+    const cfg = Array.isArray(arr) ? arr[0] : null
+    if (!cfg) return { success: false, message: 'Config não encontrada.' }
+    const { error } = await db().patch(`config?id=eq.${cfg.id}`, { theme: data })
+    if (error) return { success: false, message: String(error) }
+    return { success: true, message: 'Aparência salva com sucesso.' }
   }
 )
 
@@ -258,10 +299,12 @@ export const sendNewsletterAction = createServerFn({ method: 'POST' }).handler(
     try {
       const { sendBatch }                              = await import('./email')
       const { newsletterDigest, DEFAULT_NEWSLETTER }   = await import('./email-templates')
-      const configArr = await client.get('config?select=email_templates&limit=1')
-      const tpl = (Array.isArray(configArr) ? configArr[0] : null)?.email_templates?.newsletter ?? DEFAULT_NEWSLETTER
+      const configArr = await client.get('config?select=email_templates,theme&limit=1')
+      const cfgRow = Array.isArray(configArr) ? configArr[0] : null
+      const tpl = cfgRow?.email_templates?.newsletter ?? DEFAULT_NEWSLETTER
+      const emailTheme = cfgRow?.theme?.email ?? undefined
       const sent = await sendBatch(recipients, (token) =>
-        newsletterDigest(posts, data.subject, data.editorial, token, tpl)
+        newsletterDigest(posts, data.subject, data.editorial, token, tpl, emailTheme)
       )
       return { success: true, message: `Newsletter enviada para ${sent} inscritos.`, sent }
     } catch (e: any) {

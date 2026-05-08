@@ -3,35 +3,57 @@
  * Estilo: minimalista, tipografia serif, paleta neutra
  *
  * Os textos editáveis são carregados do banco (config.email_templates).
+ * As cores do e-mail vêm de config.theme.email.
  * O layout/CSS permanece fixo para garantir consistência visual.
  */
 
-import type { WelcomeTemplate, NewsletterTemplate } from './server-tasks'
+import type { WelcomeTemplate, NewsletterTemplate, EmailTheme } from './server-tasks'
 
 const BASE_URL = process.env.BLOG_URL || 'https://lfminsights.com.br'
 
-export const EMAIL_CSS = `
-  body { margin: 0; padding: 0; background: #f5f4f0; font-family: Georgia, 'Times New Roman', serif; color: #1a1a1a; }
+export const DEFAULT_EMAIL_THEME: EmailTheme = {
+  accent_hex: '#8b7355',
+  bg_hex: '#f5f4f0',
+  text_hex: '#1a1a1a',
+}
+
+export function buildEmailCss(
+  accent = DEFAULT_EMAIL_THEME.accent_hex,
+  bg = DEFAULT_EMAIL_THEME.bg_hex,
+  textColor = DEFAULT_EMAIL_THEME.text_hex,
+) {
+  // Derived lighter bg for blockquote/footer (15% lighter approximation)
+  const lightBg = bg === '#f5f4f0' ? '#faf9f6' : bg + 'cc' // fallback tint
+
+  return `
+  body { margin: 0; padding: 0; background: ${bg}; font-family: Georgia, 'Times New Roman', serif; color: ${textColor}; }
   .wrap { max-width: 620px; margin: 40px auto; background: #ffffff; border: 1px solid #e5e3dc; }
   .header { padding: 36px 48px 28px; border-bottom: 1px solid #e5e3dc; }
-  .logo { font-size: 13px; font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: #1a1a1a; text-decoration: none; }
-  .logo span { color: #8b7355; }
+  .logo { font-size: 13px; font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: ${textColor}; text-decoration: none; }
+  .logo span { color: ${accent}; }
   .body { padding: 40px 48px; }
-  .footer { padding: 24px 48px; border-top: 1px solid #e5e3dc; background: #faf9f6; }
+  .footer { padding: 24px 48px; border-top: 1px solid #e5e3dc; background: ${lightBg}; }
   h1 { font-size: 28px; line-height: 1.2; margin: 0 0 16px; font-weight: normal; }
   h2 { font-size: 20px; line-height: 1.25; margin: 32px 0 8px; font-weight: normal; }
   p { font-size: 16px; line-height: 1.7; margin: 0 0 16px; color: #3a3a3a; }
-  .meta { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #8b7355; margin: 0 0 8px; }
+  .meta { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: ${accent}; margin: 0 0 8px; }
   .excerpt { font-size: 15px; color: #5a5a5a; line-height: 1.6; margin: 0 0 12px; }
-  .opinion { background: #faf9f6; border-left: 3px solid #8b7355; padding: 16px 20px; margin: 12px 0 20px; font-style: italic; font-size: 15px; color: #2a2a2a; line-height: 1.6; }
-  .btn { display: inline-block; background: #1a1a1a; color: #ffffff !important; text-decoration: none; padding: 10px 22px; font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+  .opinion { background: ${lightBg}; border-left: 3px solid ${accent}; padding: 16px 20px; margin: 12px 0 20px; font-style: italic; font-size: 15px; color: #2a2a2a; line-height: 1.6; }
+  .btn { display: inline-block; background: ${textColor}; color: #ffffff !important; text-decoration: none; padding: 10px 22px; font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
   .divider { border: none; border-top: 1px solid #e5e3dc; margin: 28px 0; }
   .footer-text { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #8a8a8a; line-height: 1.6; margin: 0; }
-  a { color: #8b7355; }
+  a { color: ${accent}; }
   @media (max-width: 640px) { .wrap { margin: 0; } .header, .body, .footer { padding-left: 24px; padding-right: 24px; } h1 { font-size: 22px; } }
 `
+}
 
-function layout(content: string, unsubscribeUrl: string, footerText?: string) {
+// Static export for client-side preview in admin (uses defaults)
+export const EMAIL_CSS = buildEmailCss()
+
+function layout(content: string, unsubscribeUrl: string, footerText?: string, emailTheme?: EmailTheme) {
+  const { accent_hex, bg_hex, text_hex } = emailTheme ?? DEFAULT_EMAIL_THEME
+  const css = buildEmailCss(accent_hex, bg_hex, text_hex)
+
   const defaultFooter = `Você recebe este e-mail porque se inscreveu em <a href="${BASE_URL}">LFM Insights</a>.<br /><a href="${unsubscribeUrl}" style="color:#8a8a8a;">Cancelar inscrição</a> &nbsp;·&nbsp; Luiz Felipe Michelin — Consultor CVM`
   const footer = footerText
     ? footerText.replace(/\n/g, '<br />') + `<br /><a href="${unsubscribeUrl}" style="color:#8a8a8a;">Cancelar inscrição</a>`
@@ -42,7 +64,7 @@ function layout(content: string, unsubscribeUrl: string, footerText?: string) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>${EMAIL_CSS}</style>
+  <style>${css}</style>
 </head>
 <body>
   <div class="wrap">
@@ -79,6 +101,7 @@ export function welcomeEmail(
   email: string,
   unsubscribeToken: string,
   tpl: WelcomeTemplate = DEFAULT_WELCOME,
+  emailTheme?: EmailTheme,
 ) {
   const unsubscribeUrl = `${BASE_URL}/unsubscribe?token=${unsubscribeToken}`
 
@@ -100,7 +123,7 @@ export function welcomeEmail(
 
   return {
     subject: tpl.subject,
-    html: layout(content, unsubscribeUrl),
+    html: layout(content, unsubscribeUrl, undefined, emailTheme),
   }
 }
 
@@ -121,6 +144,7 @@ export function newsletterDigest(
   editorial: string,
   unsubscribeToken: string,
   tpl: NewsletterTemplate = DEFAULT_NEWSLETTER,
+  emailTheme?: EmailTheme,
 ) {
   const unsubscribeUrl = `${BASE_URL}/unsubscribe?token=${unsubscribeToken}`
   const date = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -145,6 +169,6 @@ export function newsletterDigest(
 
   return {
     subject,
-    html: layout(content, unsubscribeUrl, tpl.footer_text),
+    html: layout(content, unsubscribeUrl, tpl.footer_text, emailTheme),
   }
 }

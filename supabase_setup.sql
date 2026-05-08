@@ -80,6 +80,7 @@ ALTER TABLE config ADD COLUMN IF NOT EXISTS max_posts_per_sync INTEGER DEFAULT 1
 ALTER TABLE config ADD COLUMN IF NOT EXISTS posts_per_feed INTEGER DEFAULT 6;
 ALTER TABLE config ADD COLUMN IF NOT EXISTS social_links JSONB DEFAULT '{}'::jsonb;
 ALTER TABLE config ADD COLUMN IF NOT EXISTS email_templates JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE config ADD COLUMN IF NOT EXISTS theme JSONB DEFAULT '{}'::jsonb;
 
 -- Remove coluna antiga rss_feed_url se existir (era string, agora e array)
 -- ALTER TABLE config DROP COLUMN IF EXISTS rss_feed_url;

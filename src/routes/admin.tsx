@@ -9,6 +9,7 @@ import {
   LogOut,
   ChevronRight,
   Mail,
+  Palette,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -66,6 +67,7 @@ function AdminLayout() {
     { label: 'Posts e Notícias', href: '/admin/posts', icon: Newspaper },
     { label: 'Inscritos', href: '/admin/newsletter', icon: Users },
     { label: 'Templates de E-mail', href: '/admin/email-templates', icon: Mail },
+    { label: 'Aparência', href: '/admin/appearance', icon: Palette },
     { label: 'Configurações', href: '/admin/settings', icon: Settings },
   ]
 
