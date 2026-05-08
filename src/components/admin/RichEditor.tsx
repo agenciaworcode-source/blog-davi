@@ -165,12 +165,34 @@ export function RichEditor({ value, onChange, placeholder, className, minHeight 
         )}
       </div>
 
-      {/* Editor */}
-      <EditorContent
-        editor={editor}
-        className="px-3 py-3 text-sm leading-relaxed [&_.ProseMirror]:min-h-[var(--min-h)] [&_.ProseMirror]:focus:outline-none [&_.ProseMirror_p]:mb-3 [&_.ProseMirror_h2]:mb-2 [&_.ProseMirror_h2]:mt-4 [&_.ProseMirror_h2]:text-lg [&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_h3]:mb-1 [&_.ProseMirror_h3]:mt-3 [&_.ProseMirror_h3]:text-base [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-5 [&_.ProseMirror_ul]:mb-3 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-5 [&_.ProseMirror_ol]:mb-3 [&_.ProseMirror_blockquote]:border-l-2 [&_.ProseMirror_blockquote]:border-primary [&_.ProseMirror_blockquote]:pl-4 [&_.ProseMirror_blockquote]:italic [&_.ProseMirror_blockquote]:text-muted-foreground [&_.ProseMirror_hr]:my-4 [&_.ProseMirror_hr]:border-border [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted-foreground/50 [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0'
-        style={{ '--min-h': minHeight } as React.CSSProperties}
-      />
+      {/* Editor styles */}
+      <style>{`
+        .lfm-rich-editor .ProseMirror {
+          min-height: ${minHeight};
+          outline: none;
+          padding: 12px;
+          font-size: 0.875rem;
+          line-height: 1.7;
+        }
+        .lfm-rich-editor .ProseMirror p { margin-bottom: 0.75rem; }
+        .lfm-rich-editor .ProseMirror h2 { font-size: 1.125rem; font-weight: 600; margin: 1rem 0 0.5rem; }
+        .lfm-rich-editor .ProseMirror h3 { font-size: 1rem; font-weight: 600; margin: 0.75rem 0 0.375rem; }
+        .lfm-rich-editor .ProseMirror ul { list-style: disc; padding-left: 1.25rem; margin-bottom: 0.75rem; }
+        .lfm-rich-editor .ProseMirror ol { list-style: decimal; padding-left: 1.25rem; margin-bottom: 0.75rem; }
+        .lfm-rich-editor .ProseMirror li { margin-bottom: 0.25rem; }
+        .lfm-rich-editor .ProseMirror blockquote { border-left: 2px solid hsl(var(--primary)); padding-left: 1rem; font-style: italic; color: hsl(var(--muted-foreground)); margin-bottom: 0.75rem; }
+        .lfm-rich-editor .ProseMirror hr { border-top: 1px solid hsl(var(--border)); margin: 1rem 0; }
+        .lfm-rich-editor .ProseMirror strong { font-weight: 600; }
+        .lfm-rich-editor .ProseMirror em { font-style: italic; }
+        .lfm-rich-editor .ProseMirror p.is-editor-empty:first-child::before {
+          content: attr(data-placeholder);
+          float: left;
+          color: hsl(var(--muted-foreground) / 0.5);
+          pointer-events: none;
+          height: 0;
+        }
+      `}</style>
+      <EditorContent editor={editor} className="lfm-rich-editor" />
     </div>
   )
 }
