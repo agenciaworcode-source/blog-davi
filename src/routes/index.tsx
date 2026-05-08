@@ -3,9 +3,22 @@ import { Header } from "@/components/blog/Header";
 import { Footer } from "@/components/blog/Footer";
 import { Newsletter } from "@/components/blog/Newsletter";
 import { PostCard } from "@/components/blog/PostCard";
-import { posts } from "@/data/posts";
+
+const COLS = "slug,title,excerpt,category,date,reading_time,source,cover,opinion,body,featured";
+
+async function fetchPublishedPosts() {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const res = await fetch(
+    `${url}/rest/v1/posts?select=${COLS}&published=eq.true&order=date.desc`,
+    { headers: { apikey: key, Authorization: `Bearer ${key}` } },
+  );
+  if (!res.ok) return [];
+  return res.json();
+}
 
 export const Route = createFileRoute("/")({
+  loader: fetchPublishedPosts,
   head: () => ({
     meta: [
       { title: "LFM Insights — Feed de Economia & Mercado" },
@@ -19,9 +32,22 @@ const fmt = (d: string) =>
   new Date(d + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
 function Index() {
+  const posts = Route.useLoaderData();
   const featured = posts.find((p) => p.featured) ?? posts[0];
-  const rest = posts.filter((p) => p.slug !== featured.slug);
+  const rest = posts.filter((p) => p.slug !== featured?.slug);
   const categories = Array.from(new Set(posts.map((p) => p.category)));
+
+  if (!featured) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="container-blog py-32 text-center">
+          <p className="font-serif text-2xl text-muted-foreground">Nenhuma análise publicada ainda.</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

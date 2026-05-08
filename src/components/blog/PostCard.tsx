@@ -35,7 +35,7 @@ export function PostCard({ post, variant = "default" }: { post: Post; variant?: 
           </h3>
           <p className="mt-2 line-clamp-2 text-sm text-muted-foreground leading-relaxed">{post.excerpt}</p>
           <div className="mt-4 text-xs text-muted-foreground">
-            {post.readingTime} de leitura
+            {post.reading_time} de leitura
           </div>
         </div>
       </div>

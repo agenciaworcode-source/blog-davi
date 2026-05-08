@@ -3,13 +3,28 @@ import { Header } from "@/components/blog/Header";
 import { Footer } from "@/components/blog/Footer";
 import { Newsletter } from "@/components/blog/Newsletter";
 import { PostCard } from "@/components/blog/PostCard";
-import { posts, getPost } from "@/data/posts";
+
+const COLS = "slug,title,excerpt,category,date,reading_time,source,cover,opinion,body,featured";
+
+async function supabaseGet(path: string) {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const res = await fetch(`${url}/rest/v1/${path}`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+  });
+  return res.ok ? res.json() : null;
+}
 
 export const Route = createFileRoute("/post/$slug")({
-  loader: ({ params }) => {
-    const post = getPost(params.slug);
+  loader: async ({ params }) => {
+    const slug = encodeURIComponent(params.slug);
+    const [postArr, related] = await Promise.all([
+      supabaseGet(`posts?select=${COLS}&slug=eq.${slug}&published=eq.true&limit=1`),
+      supabaseGet(`posts?select=${COLS}&published=eq.true&slug=neq.${slug}&order=date.desc&limit=3`),
+    ]);
+    const post = Array.isArray(postArr) ? postArr[0] : null;
     if (!post) throw notFound();
-    return { post };
+    return { post, related: related ?? [] };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -42,8 +57,7 @@ const fmt = (d: string) =>
   new Date(d + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
 function PostPage() {
-  const { post } = Route.useLoaderData();
-  const related = posts.filter((p) => p.slug !== post.slug).slice(0, 3);
+  const { post, related } = Route.useLoaderData();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -58,7 +72,7 @@ function PostPage() {
             </Link>
             <div className="mt-6 flex flex-wrap items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.18em]">
               <span className="rounded-full bg-primary px-3 py-1 text-primary-foreground">{post.category}</span>
-              <span className="text-muted-foreground">{fmt(post.date)} · {post.readingTime} de leitura</span>
+              <span className="text-muted-foreground">{fmt(post.date)} · {post.reading_time} de leitura</span>
             </div>
             <h1 className="mt-5 font-serif text-4xl md:text-5xl font-semibold leading-[1.05]">
               {post.title}
@@ -72,8 +86,8 @@ function PostPage() {
                   <div className="text-xs text-muted-foreground">Consultor de Investimentos · CVM</div>
                 </div>
               </div>
-              <a href={post.source.url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-primary">
-                Fonte: <span className="underline">{post.source.name}</span>
+              <a href={post.source?.url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-primary">
+                Fonte: <span className="underline">{post.source?.name}</span>
               </a>
             </div>
           </div>
@@ -101,7 +115,7 @@ function PostPage() {
               </div>
             </div>
             <p className="mt-5 font-serif text-xl md:text-2xl leading-snug text-foreground italic">
-              “{post.opinion}”
+              "{post.opinion}"
             </p>
           </aside>
 
@@ -113,14 +127,16 @@ function PostPage() {
       </article>
 
       {/* Related */}
-      <section className="border-t border-border bg-muted/30">
-        <div className="container-blog py-16">
-          <h2 className="font-serif text-2xl font-semibold">Continue lendo</h2>
-          <div className="mt-8 grid gap-8 md:grid-cols-3">
-            {related.map((p) => <PostCard key={p.slug} post={p} />)}
+      {related.length > 0 && (
+        <section className="border-t border-border bg-muted/30">
+          <div className="container-blog py-16">
+            <h2 className="font-serif text-2xl font-semibold">Continue lendo</h2>
+            <div className="mt-8 grid gap-8 md:grid-cols-3">
+              {related.map((p: any) => <PostCard key={p.slug} post={p} />)}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <Newsletter />
       <Footer />

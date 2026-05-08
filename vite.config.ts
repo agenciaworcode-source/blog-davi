@@ -12,4 +12,15 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  vite: {
+    // Garante que @supabase/supabase-js seja pré-bundlizado mesmo quando
+    // o scan falha no rss-sync.ts (que usa imports server-only)
+    optimizeDeps: {
+      include: ['@supabase/supabase-js', 'resend'],
+    },
+    ssr: {
+      // Pacotes server-only: Node.js resolve diretamente sem bundlar
+      external: ['rss-parser', 'openai'],
+    },
+  },
 });
