@@ -75,23 +75,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "LFM Insights — Economia & Mercado por Luiz Felipe Michelin" },
       { name: "description", content: "Curadoria diária e opinião sobre as notícias que movem a economia, por Luiz Felipe Michelin, consultor independente CVM." },
       { name: "author", content: "Luiz Felipe Michelin" },
+      { name: "keywords", content: "economia, mercado financeiro, investimentos, Luiz Felipe Michelin, consultoria CVM, análises econômicas" },
+      { name: "robots", content: "index, follow" },
       { property: "og:title", content: "LFM Insights — Economia & Mercado por Luiz Felipe Michelin" },
       { property: "og:description", content: "Curadoria diária e opinião sobre as notícias que movem a economia, por Luiz Felipe Michelin, consultor independente CVM." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { property: "og:site_name", content: "LFM Insights" },
+      { property: "og:locale", content: "pt_BR" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:creator", content: "@lfmichelin" },
       { name: "twitter:title", content: "LFM Insights — Economia & Mercado por Luiz Felipe Michelin" },
       { name: "twitter:description", content: "Curadoria diária e opinião sobre as notícias que movem a economia, por Luiz Felipe Michelin, consultor independente CVM." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5b31470e-fb08-450a-8477-3bfe3c020d90/id-preview-2e23d336--b1bebdf8-b53c-4c85-8a7a-3eacd0e9eb02.lovable.app-1778168736069.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5b31470e-fb08-450a-8477-3bfe3c020d90/id-preview-2e23d336--b1bebdf8-b53c-4c85-8a7a-3eacd0e9eb02.lovable.app-1778168736069.png" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "apple-touch-icon", href: "/favicon.svg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "preconnect", href: import.meta.env.VITE_SUPABASE_URL },
+      { rel: "stylesheet", href: appCss },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" },
     ],
   }),
@@ -103,7 +107,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>

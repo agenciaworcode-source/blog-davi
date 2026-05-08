@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   Save,
   Eye,
+  ExternalLink,
   Sparkles,
   Image as ImageIcon,
   Type,
@@ -142,13 +143,30 @@ function PostEditor() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!post.published || !post.slug}
+            title={post.published ? 'Ver post no blog' : 'Publique o post para visualizar'}
+            onClick={() => post.slug && window.open(`/post/${post.slug}`, '_blank')}
+          >
             <Eye className="mr-2 h-4 w-4" />
             Visualizar
           </Button>
+          {post.source?.url && (
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Ver notícia original"
+              onClick={() => window.open(post.source.url, '_blank')}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Fonte
+            </Button>
+          )}
           <Button size="sm" onClick={handleSave} disabled={saving}>
             <Save className="mr-2 h-4 w-4" />
-            {saving ? 'Salvando...' : 'Salvar Alterações'}
+            {saving ? 'Salvando...' : 'Salvar'}
           </Button>
         </div>
       </div>

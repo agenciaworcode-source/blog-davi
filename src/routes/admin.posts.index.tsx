@@ -1,20 +1,20 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Plus, 
-  Search, 
-  MoreHorizontal, 
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
   ExternalLink,
   Eye,
   Trash2,
@@ -73,7 +73,7 @@ function AdminPosts() {
       } else {
         toast.error(result.message)
       }
-    } catch (error: any) {
+    } catch {
       toast.error('Falha na comunicação com o servidor.')
     }
     setSyncing(false)
@@ -81,12 +81,7 @@ function AdminPosts() {
 
   async function deletePost(id: string) {
     if (!confirm('Tem certeza que deseja excluir este post?')) return
-
-    const { error } = await supabase
-      .from('posts')
-      .delete()
-      .eq('id', id)
-
+    const { error } = await supabase.from('posts').delete().eq('id', id)
     if (error) {
       toast.error('Erro ao excluir: ' + error.message)
     } else {
@@ -95,7 +90,7 @@ function AdminPosts() {
     }
   }
 
-  const filteredPosts = posts.filter(post => 
+  const filteredPosts = posts.filter(post =>
     post.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     post.category?.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -108,7 +103,7 @@ function AdminPosts() {
           <p className="text-muted-foreground mt-1">Gerencie as notícias rastreadas e as opiniões da IA.</p>
         </div>
         <div className="flex items-center gap-2">
-           <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing}>
+          <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing}>
             {syncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-2 h-4 w-4" />}
             {syncing ? 'Sincronizando...' : 'Sincronizar RSS'}
           </Button>
@@ -124,8 +119,8 @@ function AdminPosts() {
       <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Buscar por título ou categoria..." 
+          <Input
+            placeholder="Buscar por título ou categoria..."
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -175,12 +170,37 @@ function AdminPosts() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1">
+                      {/* Editar */}
                       <Link to="/admin/posts/$id" params={{ id: post.id }}>
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                        <Button variant="ghost" size="icon" title="Editar post">
+                          <Edit className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </Link>
+
+                      {/* Visualizar no blog */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title={post.published ? 'Ver no blog' : 'Publique o post para visualizar'}
+                        disabled={!post.published}
+                        onClick={() => window.open(`/post/${post.slug}`, '_blank')}
+                      >
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+
+                      {/* Ver fonte original */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title={post.source?.url ? 'Ver notícia original' : 'Sem fonte cadastrada'}
+                        disabled={!post.source?.url}
+                        onClick={() => post.source?.url && window.open(post.source.url, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+
+                      {/* Mais ações */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
@@ -188,17 +208,9 @@ function AdminPosts() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                          <DropdownMenuItem asChild>
-                            <a href={`/post/${post.slug}`} target="_blank" rel="noreferrer" className="flex items-center">
-                              <Eye className="mr-2 h-4 w-4" /> Visualizar
-                            </a>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <ExternalLink className="mr-2 h-4 w-4" /> Ver Fonte
-                          </DropdownMenuItem>
+                          <DropdownMenuLabel>Mais ações</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
                             onClick={() => deletePost(post.id)}
                           >

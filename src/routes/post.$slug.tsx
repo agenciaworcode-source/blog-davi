@@ -34,8 +34,48 @@ export const Route = createFileRoute("/post/$slug")({
           { property: "og:title", content: loaderData.post.title },
           { property: "og:description", content: loaderData.post.excerpt },
           { property: "og:image", content: loaderData.post.cover },
+          { property: "og:type", content: "article" },
+          { property: "article:published_time", content: loaderData.post.date },
+          { property: "article:author", content: "Luiz Felipe Michelin" },
+          { property: "article:section", content: loaderData.post.category },
+          { name: "twitter:card", content: "summary_large_image" },
+          { name: "twitter:title", content: loaderData.post.title },
+          { name: "twitter:description", content: loaderData.post.excerpt },
+          { name: "twitter:image", content: loaderData.post.cover },
         ]
       : [],
+    scripts: loaderData
+      ? [
+          {
+            type: "application/ld+json",
+            children: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              "headline": loaderData.post.title,
+              "image": loaderData.post.cover,
+              "datePublished": loaderData.post.date,
+              "author": {
+                "@type": "Person",
+                "name": "Luiz Felipe Michelin",
+                "url": "https://consultorialfm.com.br"
+              },
+              "description": loaderData.post.excerpt,
+              "publisher": {
+                "@type": "Organization",
+                "name": "LFM Insights",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "http://localhost:8080/favicon.svg"
+                }
+              },
+              "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": `http://localhost:8080/post/${loaderData.post.slug}`
+              }
+            })
+          }
+        ]
+      : []
   }),
   notFoundComponent: () => (
     <div className="min-h-screen flex flex-col">
@@ -95,7 +135,12 @@ function PostPage() {
 
         {/* Cover */}
         <div className="container-blog max-w-5xl -mt-2">
-          <img src={post.cover} alt={post.title} className="aspect-[16/8] w-full rounded-2xl object-cover shadow-[var(--shadow-elegant)]" />
+          <img
+            src={post.cover}
+            alt={post.title}
+            className="aspect-[16/8] w-full rounded-2xl object-cover shadow-[var(--shadow-elegant)]"
+            fetchPriority="high"
+          />
         </div>
 
         {/* Body */}
