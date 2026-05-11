@@ -8,7 +8,7 @@ export function PostCard({ post, variant = "default" }: { post: Post; variant?: 
   if (variant === "compact") {
     return (
       <Link to="/post/$slug" params={{ slug: post.slug }} className="group flex gap-4 py-5 border-b border-border last:border-0">
-        <img src={post.cover} alt="" className="h-16 w-16 flex-none rounded-lg object-cover" loading="lazy" />
+        <img src={post.cover} alt="" width={64} height={64} className="h-16 w-16 flex-none rounded-lg object-cover" loading="lazy" />
         <div className="min-w-0">
           <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{post.category}</div>
           <h3 className="mt-1.5 line-clamp-2 font-serif text-base leading-snug text-foreground group-hover:text-foreground/70 transition">
@@ -23,7 +23,7 @@ export function PostCard({ post, variant = "default" }: { post: Post; variant?: 
     <Link to="/post/$slug" params={{ slug: post.slug }} className="group block">
       <div className="overflow-hidden rounded-2xl bg-background">
         <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-muted">
-          <img src={post.cover} alt={post.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" loading="lazy" />
+          <img src={post.cover} alt={post.title} width={400} height={300} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" loading="lazy" />
         </div>
         <div className="pt-5">
           <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">

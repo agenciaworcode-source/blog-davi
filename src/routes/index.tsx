@@ -22,28 +22,35 @@ export const Route = createFileRoute("/")({
   loader: fetchPublishedPosts,
   staleTime: 1000 * 60 * 5, // Cache por 5 minutos
   gcTime: 1000 * 60 * 30, // Guarda em memória por 30 minutos
-  head: () => ({
-    meta: [
-      { title: "LFM Insights — Feed de Economia & Mercado" },
-      { name: "description", content: "Feed das principais notícias econômicas com a opinião de Luiz Felipe Michelin." },
-    ],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Blog",
-          "name": "LFM Insights",
-          "url": "http://localhost:8080", // Idealmente usar BLOG_URL
-          "description": "Curadoria diária e opinião sobre as notícias que movem a economia, por Luiz Felipe Michelin.",
-          "author": {
-            "@type": "Person",
-            "name": "Luiz Felipe Michelin"
-          }
-        })
-      }
-    ]
-  }),
+  head: ({ loaderData }) => {
+    const posts = loaderData || [];
+    const featured = posts.find((p: any) => p.featured) ?? posts[0];
+    return {
+      meta: [
+        { title: "LFM Insights — Feed de Economia & Mercado" },
+        { name: "description", content: "Feed das principais notícias econômicas com a opinião de Luiz Felipe Michelin." },
+      ],
+      links: featured ? [
+        { rel: "preload", as: "image", href: featured.cover, fetchPriority: "high" }
+      ] : [],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Blog",
+            "name": "LFM Insights",
+            "url": "http://localhost:8080", // Idealmente usar BLOG_URL
+            "description": "Curadoria diária e opinião sobre as notícias que movem a economia, por Luiz Felipe Michelin.",
+            "author": {
+              "@type": "Person",
+              "name": "Luiz Felipe Michelin"
+            }
+          })
+        }
+      ]
+    };
+  },
   component: Index,
 });
 
@@ -101,6 +108,8 @@ function Index() {
                 <img
                   src={featured.cover}
                   alt={featured.title}
+                  width={800}
+                  height={1000}
                   className="h-full w-full object-cover aspect-[4/5] transition duration-700 hover:scale-[1.02]"
                   fetchPriority="high"
                 />

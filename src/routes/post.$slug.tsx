@@ -46,6 +46,11 @@ export const Route = createFileRoute("/post/$slug")({
           { name: "twitter:image", content: loaderData.post.cover },
         ]
       : [],
+    links: loaderData
+      ? [
+          { rel: "preload", as: "image", href: loaderData.post.cover, fetchPriority: "high" }
+        ]
+      : [],
     scripts: loaderData
       ? [
           {
@@ -140,6 +145,8 @@ function PostPage() {
           <img
             src={post.cover}
             alt={post.title}
+            width={1200}
+            height={600}
             className="aspect-[16/8] w-full rounded-2xl object-cover shadow-[var(--shadow-elegant)]"
             fetchPriority="high"
           />
