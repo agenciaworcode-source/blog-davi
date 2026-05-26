@@ -156,7 +156,13 @@ function PostPage() {
         <div className="container-blog max-w-3xl py-14">
           <h2 className="font-serif text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">A notícia</h2>
           <div className="mt-4 space-y-5 text-lg leading-relaxed text-foreground/90">
-            {post.body.map((p: string, i: number) =>
+            {post.body
+              .filter((p: string) => {
+                // Remove parágrafos vazios que a IA pode gerar
+                const stripped = p.replace(/<[^>]*>/g, '').trim()
+                return stripped.length > 0
+              })
+              .map((p: string, i: number) =>
               p.startsWith('<')
                 ? <div key={i} dangerouslySetInnerHTML={{ __html: p }} className="[&_h2]:font-serif [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mt-8 [&_h2]:mb-3 [&_h3]:font-serif [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_li]:mb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/40 [&_blockquote]:pl-5 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_p]:mb-4 [&_strong]:font-semibold [&_em]:italic [&_hr]:border-border [&_hr]:my-6" />
                 : <p key={i}>{p}</p>
@@ -172,9 +178,9 @@ function PostPage() {
                 <div className="text-xs text-muted-foreground">Leitura prática para a sua carteira</div>
               </div>
             </div>
-            <p className="mt-5 font-serif text-xl md:text-2xl leading-snug text-foreground italic">
-              "{post.opinion}"
-            </p>
+            <div className="mt-5 text-base md:text-lg leading-relaxed text-foreground/90 whitespace-pre-line font-rounded">
+              {post.opinion}
+            </div>
           </aside>
 
           <div className="mt-12 rounded-xl border border-border bg-muted/50 p-5 text-sm text-muted-foreground">

@@ -199,7 +199,8 @@ function PostEditor() {
                   value={post.excerpt}
                   onChange={e => setPost({...post, excerpt: e.target.value})}
                   placeholder="Breve descrição para o feed..."
-                  className="h-20"
+                  className="min-h-[100px] resize-y overflow-y-auto"
+                  rows={4}
                 />
               </div>
               
@@ -230,7 +231,7 @@ function PostEditor() {
                 value={post.opinion}
                 onChange={e => setPost({...post, opinion: e.target.value})}
                 placeholder="Insira a análise estratégica aqui..."
-                className="min-h-[150px] bg-background font-serif text-lg italic"
+                className="min-h-[150px] bg-background font-sans text-base leading-relaxed"
               />
             </CardContent>
           </Card>

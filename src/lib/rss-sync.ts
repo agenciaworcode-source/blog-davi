@@ -45,10 +45,11 @@ async function enrichWithAI(
   config: Record<string, any>,
   item: Parser.Item,
   feedName: string,
-): Promise<{ summary: string[]; opinion: string; category: string }> {
+): Promise<{ excerpt: string; summary: string[]; opinion: string; category: string }> {
   const rawText = item.contentSnippet || item.content || item.title || ''
 
   const fallback = {
+    excerpt: (item.contentSnippet || item.title || '').slice(0, 200).trim(),
     summary: rawText
       ? rawText.match(/.{1,500}/gs)?.slice(0, 4) ?? [rawText.slice(0, 1500)]
       : ['Conteúdo disponível em breve.'],
@@ -70,13 +71,14 @@ Conteúdo: ${rawText.slice(0, 4000)}
 
 TAREFA — responda SOMENTE em JSON válido, sem markdown:
 {
+  "excerpt": "resumo em 1 frase completa com no máximo 160 caracteres explicando o tema principal de forma atrativa e direta, sem cortar no meio.",
   "summary": [
-    "parágrafo 1 — contexto completo da notícia (mínimo 100 palavras)",
-    "parágrafo 2 — análise macroeconômica aprofundada (mínimo 100 palavras)",
-    "parágrafo 3 — impacto prático no investidor brasileiro (mínimo 80 palavras)",
-    "parágrafo 4 — perspectivas e próximos passos (mínimo 60 palavras)"
+    "parágrafo 1 — contexto claro, direto e sem rodeios da notícia (entre 60 e 90 palavras)",
+    "parágrafo 2 — análise macroeconômica condensada e precisa (entre 60 e 90 palavras)",
+    "parágrafo 3 — impacto prático equilibrado no investidor brasileiro (entre 50 e 80 palavras)",
+    "parágrafo 4 — perspectivas e próximos passos diretos (entre 40 e 70 palavras)"
   ],
-  "opinion": "Opinião do Luiz em 1-2 frases impactantes, máximo 280 caracteres, na primeira pessoa.",
+  "opinion": "Opinião do Luiz: análise macroeconômica e estratégica extremamente profunda, detalhada e analítica escrita em primeira pessoa (como Luiz Felipe Michelin). Aplique rigorosamente TODAS as diretrizes de persona e estrutura detalhadas nas instruções acima (Resumo e Contexto, Impactos Macroeconômicos sobre SELIC/inflação/PIB, Impactos nos Investimentos para classes de ativos, Leitura Oculta de mercado, Cenários Futuros, Oportunidades e a Conclusão com principal risco e oportunidade). A opinião DEVE ser longa, rica, estruturada e de altíssima densidade analítica (entre 1500 e 4000 caracteres), dividida em múltiplos parágrafos ricos usando quebras de linha duplas (\\n\\n) para separá-los de forma elegante.",
   "category": "uma das opções: Política Monetária | Câmbio | Bolsa | Renda Fixa | Fiscal | Internacional | Commodities | Mercado | Conjuntura"
 }
 `.trim()
@@ -92,6 +94,9 @@ TAREFA — responda SOMENTE em JSON válido, sem markdown:
     const parsed = JSON.parse(response.choices[0].message.content || '{}')
 
     return {
+      excerpt: typeof parsed.excerpt === 'string' && parsed.excerpt.length > 10
+        ? parsed.excerpt.trim()
+        : fallback.excerpt,
       summary: Array.isArray(parsed.summary) && parsed.summary.length > 0
         ? parsed.summary
         : fallback.summary,
@@ -226,12 +231,22 @@ export async function runRssSync(triggeredBy: 'manual' | 'cron' | 'api' = 'manua
         }
 
         // AI enrichment
-        const { summary, opinion, category } = await enrichWithAI(openai, config || {}, item, feed.name)
+        const { excerpt: aiExcerpt, summary, opinion, category } = await enrichWithAI(openai, config || {}, item, feed.name)
+
+        // Limpeza inteligente do Excerpt para não cortar palavras no meio
+        const excerptRaw = aiExcerpt || (item.contentSnippet || item.title || '').trim()
+        let excerpt = excerptRaw
+        if (excerptRaw.length > 200) {
+          const lastSpace = excerptRaw.lastIndexOf(' ', 200)
+          excerpt = lastSpace > 0
+            ? excerptRaw.slice(0, lastSpace).trim() + '...'
+            : excerptRaw.slice(0, 200).trim() + '...'
+        }
 
         const postPayload = {
           title: item.title.trim(),
           slug,
-          excerpt: (item.contentSnippet || item.title).slice(0, 400).trim(),
+          excerpt,
           category,
           date: new Date().toISOString().split('T')[0],
           reading_time: estimateReadingTime(summary),
