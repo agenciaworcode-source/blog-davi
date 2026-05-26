@@ -274,42 +274,44 @@ function HeroBanner({ featured }: { featured: any }) {
             </div>
           ) : (
             <form onSubmit={submit} className="space-y-3">
-              <div className="relative">
-                {/* Ícone de Usuário */}
-                <svg
-                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40"
-                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => { setName(e.target.value); if (status !== "idle") setStatus("idle"); }}
-                  placeholder="Seu nome..."
-                  className="w-full rounded-full border border-white/20 bg-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-sm focus:border-white/50 focus:outline-none transition"
-                />
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="relative">
+                  {/* Ícone de Usuário */}
+                  <svg
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); if (status !== "idle") setStatus("idle"); }}
+                    placeholder="Seu nome..."
+                    className="w-full rounded-full border border-white/20 bg-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-sm focus:border-white/50 focus:outline-none transition"
+                  />
+                </div>
 
-              <div className="relative">
-                {/* Ícone envelope */}
-                <svg
-                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40"
-                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); if (status !== "idle") setStatus("idle"); }}
-                  placeholder="Seu e-mail..."
-                  className="w-full rounded-full border border-white/20 bg-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-sm focus:border-white/50 focus:outline-none transition"
-                />
+                <div className="relative">
+                  {/* Ícone envelope */}
+                  <svg
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); if (status !== "idle") setStatus("idle"); }}
+                    placeholder="Seu e-mail..."
+                    className="w-full rounded-full border border-white/20 bg-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-sm focus:border-white/50 focus:outline-none transition"
+                  />
+                </div>
               </div>
 
               <button
