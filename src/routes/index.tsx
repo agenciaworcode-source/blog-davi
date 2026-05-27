@@ -230,9 +230,9 @@ function HeroBanner({ featured }: { featured: any }) {
       </div>
 
       {/* Conteúdo */}
-      <div className="relative container-blog py-16 md:py-20 lg:py-24 max-w-4xl">
+      <div className="relative container-blog py-16 md:py-20 lg:py-24">
         {/* Identidade + link para o destaque */}
-        <div className="max-w-2xl">
+        <div className="max-w-4xl lg:max-w-5xl">
           <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
             Conheça
           </span>
@@ -252,29 +252,31 @@ function HeroBanner({ featured }: { featured: any }) {
               nos seus investimentos
             </h1>
           </Link>
-          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/65">
+          <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-white/65">
             Leia em 5 minutos as principais notícias econômicas com a visão estratégica de Luiz Felipe Michelin.
           </p>
 
           {/* Formulário de inscrição logo abaixo da headline e descrição */}
-          <div className="mt-8 w-full max-w-md">
+          <div className="mt-8 w-full max-w-2xl lg:max-w-3xl">
             {status === "ok" ? (
-              <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 px-7 py-8 text-center">
+              <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 px-6 py-5 text-left flex items-start gap-4">
                 <div
-                  className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full"
+                  className="flex h-10 w-10 items-center justify-center rounded-full shrink-0"
                   style={{ background: "var(--primary)" }}
                 >
                   <svg className="h-5 w-5" style={{ color: "var(--primary-foreground)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="font-serif text-lg text-white">Inscrição confirmada!</p>
-                <p className="mt-1 text-sm text-white/60">Verifique sua caixa de entrada.</p>
+                <div>
+                  <p className="font-serif text-base text-white font-medium">Inscrição confirmada!</p>
+                  <p className="mt-0.5 text-xs text-white/60">Verifique sua caixa de entrada para acompanhar as análises.</p>
+                </div>
               </div>
             ) : (
-              <form onSubmit={submit} className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="relative">
+              <form onSubmit={submit} className="space-y-2">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
                     {/* Ícone de Usuário */}
                     <svg
                       className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40"
@@ -293,7 +295,7 @@ function HeroBanner({ featured }: { featured: any }) {
                     />
                   </div>
 
-                  <div className="relative">
+                  <div className="relative flex-1">
                     {/* Ícone envelope */}
                     <svg
                       className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40"
@@ -311,27 +313,27 @@ function HeroBanner({ featured }: { featured: any }) {
                       className="w-full rounded-full border border-white/20 bg-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-sm focus:border-white/50 focus:outline-none transition"
                     />
                   </div>
+
+                  <button
+                    type="submit"
+                    disabled={status === "loading"}
+                    className="w-full sm:w-auto px-8 rounded-full py-3 text-sm font-semibold transition disabled:opacity-60 cursor-pointer shrink-0"
+                    style={{
+                      background: "var(--primary)",
+                      color: "var(--primary-foreground)",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
+                    onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                  >
+                    {status === "loading" ? "Inscrevendo..." : "Inscreva-se"}
+                  </button>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={status === "loading"}
-                  className="w-full rounded-full py-3 text-sm font-semibold transition disabled:opacity-60 cursor-pointer"
-                  style={{
-                    background: "var(--primary)",
-                    color: "var(--primary-foreground)",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-                >
-                  {status === "loading" ? "Inscrevendo..." : "Inscreva-se"}
-                </button>
-
-                <p className="text-center text-[11px] text-white/45">
+                <p className="text-left pl-4 text-[11px] text-white/45">
                   Inscreva-se agora para acompanhar todas as análises
                 </p>
                 {status === "err" && (
-                  <p className="text-center text-xs text-red-400">Erro ao inscrever. Tente novamente.</p>
+                  <p className="text-left pl-4 text-xs text-red-400">Erro ao inscrever. Tente novamente.</p>
                 )}
               </form>
             )}
