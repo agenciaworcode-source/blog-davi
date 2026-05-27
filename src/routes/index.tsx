@@ -230,9 +230,9 @@ function HeroBanner({ featured }: { featured: any }) {
       </div>
 
       {/* Conteúdo */}
-      <div className="relative container-blog flex flex-col gap-10 py-16 md:flex-row md:items-center md:py-20 lg:py-24">
-        {/* Esquerda: identidade + link para o destaque */}
-        <div className="flex-1">
+      <div className="relative container-blog py-16 md:py-20 lg:py-24 max-w-4xl">
+        {/* Identidade + link para o destaque */}
+        <div className="max-w-2xl">
           <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
             Conheça
           </span>
@@ -249,93 +249,93 @@ function HeroBanner({ featured }: { featured: any }) {
               <span className="italic" style={{ color: "var(--primary)" }}>
                 realmente importa
               </span>{" "}
-              para o seu bolso
+              nos seus investimentos
             </h1>
           </Link>
-          <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-white/65">
+          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/65">
             Leia em 5 minutos as principais notícias econômicas com a visão estratégica de Luiz Felipe Michelin.
           </p>
-        </div>
 
-        {/* Direita: formulário de inscrição */}
-        <div className="w-full md:w-auto md:min-w-[340px] lg:min-w-[380px]">
-          {status === "ok" ? (
-            <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 px-7 py-8 text-center">
-              <div
-                className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full"
-                style={{ background: "var(--primary)" }}
-              >
-                <svg className="h-5 w-5" style={{ color: "var(--primary-foreground)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <p className="font-serif text-lg text-white">Inscrição confirmada!</p>
-              <p className="mt-1 text-sm text-white/60">Verifique sua caixa de entrada.</p>
-            </div>
-          ) : (
-            <form onSubmit={submit} className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="relative">
-                  {/* Ícone de Usuário */}
-                  <svg
-                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40"
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          {/* Formulário de inscrição logo abaixo da headline e descrição */}
+          <div className="mt-8 w-full max-w-md">
+            {status === "ok" ? (
+              <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 px-7 py-8 text-center">
+                <div
+                  className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full"
+                  style={{ background: "var(--primary)" }}
+                >
+                  <svg className="h-5 w-5" style={{ color: "var(--primary-foreground)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => { setName(e.target.value); if (status !== "idle") setStatus("idle"); }}
-                    placeholder="Seu nome..."
-                    className="w-full rounded-full border border-white/20 bg-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-sm focus:border-white/50 focus:outline-none transition"
-                  />
+                </div>
+                <p className="font-serif text-lg text-white">Inscrição confirmada!</p>
+                <p className="mt-1 text-sm text-white/60">Verifique sua caixa de entrada.</p>
+              </div>
+            ) : (
+              <form onSubmit={submit} className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="relative">
+                    {/* Ícone de Usuário */}
+                    <svg
+                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40"
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => { setName(e.target.value); if (status !== "idle") setStatus("idle"); }}
+                      placeholder="Seu nome..."
+                      className="w-full rounded-full border border-white/20 bg-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-sm focus:border-white/50 focus:outline-none transition"
+                    />
+                  </div>
+
+                  <div className="relative">
+                    {/* Ícone envelope */}
+                    <svg
+                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40"
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); if (status !== "idle") setStatus("idle"); }}
+                      placeholder="Seu e-mail..."
+                      className="w-full rounded-full border border-white/20 bg-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-sm focus:border-white/50 focus:outline-none transition"
+                    />
+                  </div>
                 </div>
 
-                <div className="relative">
-                  {/* Ícone envelope */}
-                  <svg
-                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40"
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => { setEmail(e.target.value); if (status !== "idle") setStatus("idle"); }}
-                    placeholder="Seu e-mail..."
-                    className="w-full rounded-full border border-white/20 bg-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-sm focus:border-white/50 focus:outline-none transition"
-                  />
-                </div>
-              </div>
+                <button
+                  type="submit"
+                  disabled={status === "loading"}
+                  className="w-full rounded-full py-3 text-sm font-semibold transition disabled:opacity-60 cursor-pointer"
+                  style={{
+                    background: "var(--primary)",
+                    color: "var(--primary-foreground)",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                >
+                  {status === "loading" ? "Inscrevendo..." : "Inscreva-se"}
+                </button>
 
-              <button
-                type="submit"
-                disabled={status === "loading"}
-                className="w-full rounded-full py-3 text-sm font-semibold transition disabled:opacity-60 cursor-pointer"
-                style={{
-                  background: "var(--primary)",
-                  color: "var(--primary-foreground)",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-              >
-                {status === "loading" ? "Inscrevendo..." : "Garantir meu acesso"}
-              </button>
-
-              <p className="text-center text-[11px] text-white/45">
-                Inscreva-se agora para acompanhar todas as análises
-              </p>
-              {status === "err" && (
-                <p className="text-center text-xs text-red-400">Erro ao inscrever. Tente novamente.</p>
-              )}
-            </form>
-          )}
+                <p className="text-center text-[11px] text-white/45">
+                  Inscreva-se agora para acompanhar todas as análises
+                </p>
+                {status === "err" && (
+                  <p className="text-center text-xs text-red-400">Erro ao inscrever. Tente novamente.</p>
+                )}
+              </form>
+            )}
+          </div>
         </div>
       </div>
     </section>
